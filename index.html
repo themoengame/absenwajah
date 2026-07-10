@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Absensi Wajah</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .login-container {
+            background: white;
+            border-radius: 24px;
+            padding: 48px 40px;
+            width: 100%;
+            max-width: 420px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        .logo { text-align: center; margin-bottom: 32px; }
+        .logo h1 { font-size: 24px; color: #1a1a2e; font-weight: 700; }
+        .logo p { color: #666; font-size: 14px; margin-top: 4px; }
+        .form-group { margin-bottom: 20px; }
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            font-size: 14px;
+            color: #333;
+            margin-bottom: 6px;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+            font-family: 'Inter', sans-serif;
+        }
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        .btn-login {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .btn-login:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4);
+        }
+        .btn-login:active { transform: translateY(0); }
+        .error-message {
+            color: #e53e3e;
+            font-size: 13px;
+            margin-top: 12px;
+            text-align: center;
+            display: none;
+        }
+        .footer { text-align: center; margin-top: 20px; font-size: 12px; color: #888; }
+        .loading { opacity: 0.7; pointer-events: none; }
+    </style>
+</head>
+<body>
+
+    <div class="login-container">
+        <div class="logo">
+            <h1>📸 Absensi Wajah</h1>
+            <p>Login untuk melanjutkan</p>
+        </div>
+        
+        <div class="form-group">
+            <label>Username</label>
+            <input type="text" id="username" placeholder="Masukkan username" />
+        </div>
+        
+        <div class="form-group">
+            <label>Password</label>
+            <input type="password" id="password" placeholder="Masukkan password" />
+        </div>
+        
+        <button class="btn-login" id="loginBtn" onclick="handleLogin()">Login</button>
+        
+        <div class="error-message" id="errorMessage">Username atau password salah!</div>
+        
+        <div class="footer">Sistem Absensi Wajah v2.0</div>
+    </div>
+
+    <script>
+        var APPS_SCRIPT_URL = 'https://script.google.com/macros/s/ID_APPS_SCRIPT_ANDA/exec';
+        var LOGIN_REDIRECT = 'dashboard.html';
+
+        async function handleLogin() {
+            var username = document.getElementById('username').value.trim();
+            var password = document.getElementById('password').value.trim();
+            var errorEl = document.getElementById('errorMessage');
+            var btn = document.getElementById('loginBtn');
+            
+            if (!username || !password) {
+                errorEl.textContent = 'Username dan password harus diisi!';
+                errorEl.style.display = 'block';
+                return;
+            }
+            
+            btn.textContent = 'Loading...';
+            btn.classList.add('loading');
+            errorEl.style.display = 'none';
+            
+            try {
+                var response = await fetch(APPS_SCRIPT_URL + '?action=login&username=' + encodeURIComponent(username) + '&password=' + encodeURIComponent(password));
+                var data = await response.json();
+                
+                if (data && data.role) {
+                    // Simpan data user ke localStorage
+                    localStorage.setItem('user', JSON.stringify(data));
+                    // Redirect ke dashboard
+                    window.location.href = LOGIN_REDIRECT;
+                } else {
+                    errorEl.textContent = 'Username atau password salah!';
+                    errorEl.style.display = 'block';
+                }
+            } catch (error) {
+                errorEl.textContent = 'Terjadi kesalahan: ' + error.message;
+                errorEl.style.display = 'block';
+            }
+            
+            btn.textContent = 'Login';
+            btn.classList.remove('loading');
+        }
+        
+        document.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') handleLogin();
+        });
+    </script>
+</body>
+</html>

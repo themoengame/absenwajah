@@ -1,0 +1,1145 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Absensi Wajah</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #f0f4f8;
+            min-height: 100vh;
+        }
+        
+        /* SIDEBAR */
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 250px;
+            background: #1a1a2e;
+            padding: 24px 20px;
+            color: white;
+            overflow-y: auto;
+            z-index: 100;
+        }
+        .sidebar h2 {
+            font-size: 20px;
+            margin-bottom: 32px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        .sidebar .nav-item {
+            padding: 12px 16px;
+            margin-bottom: 4px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: background 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .sidebar .nav-item:hover,
+        .sidebar .nav-item.active {
+            background: rgba(255,255,255,0.1);
+        }
+        .sidebar .nav-item span { font-size: 18px; }
+        .sidebar .nav-item .label { font-size: 14px; }
+        .sidebar .user-info-sidebar {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            right: 20px;
+            padding: 16px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 12px;
+            font-size: 13px;
+        }
+        .sidebar .user-info-sidebar .name { font-weight: 600; }
+        .sidebar .user-info-sidebar .role { color: #8892b0; font-size: 12px; }
+        
+        /* MAIN CONTENT */
+        .main-content {
+            margin-left: 250px;
+            padding: 32px;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .header h1 { font-size: 28px; color: #1a1a2e; }
+        .header .user-info {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        .header .user-info .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #667eea;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 16px;
+        }
+        .header .user-info .role-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .role-badge.admin { background: #fc8181; color: white; }
+        .role-badge.petugas { background: #ecc94b; color: #1a1a2e; }
+        .role-badge.anggota { background: #48bb78; color: white; }
+        
+        /* STATS */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+        .stat-card {
+            background: white;
+            padding: 20px 24px;
+            border-radius: 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+        .stat-card .number {
+            font-size: 28px;
+            font-weight: 700;
+            color: #1a1a2e;
+        }
+        .stat-card .label {
+            font-size: 13px;
+            color: #666;
+            margin-top: 4px;
+        }
+        .stat-card .icon { font-size: 20px; margin-right: 8px; }
+        
+        /* CARDS */
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            margin-bottom: 24px;
+        }
+        .card h3 {
+            margin-bottom: 16px;
+            color: #1a1a2e;
+            font-size: 18px;
+        }
+        .card h4 {
+            margin-bottom: 12px;
+            color: #1a1a2e;
+            font-size: 15px;
+        }
+        
+        /* TABLES */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+        table th {
+            text-align: left;
+            padding: 10px 12px;
+            background: #f8fafc;
+            font-weight: 600;
+            font-size: 12px;
+            color: #64748b;
+            border-bottom: 2px solid #e2e8f0;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        table td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        table tr:hover { background: #f8fafc; }
+        .table-responsive { overflow-x: auto; }
+        
+        /* BUTTONS */
+        .btn {
+            padding: 8px 20px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 13px;
+            transition: transform 0.2s, box-shadow 0.2s;
+            font-family: 'Inter', sans-serif;
+        }
+        .btn:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+        .btn-primary { background: #667eea; color: white; }
+        .btn-success { background: #48bb78; color: white; }
+        .btn-danger { background: #fc8181; color: white; }
+        .btn-warning { background: #ecc94b; color: #1a1a2e; }
+        .btn-outline { background: transparent; border: 2px solid #e2e8f0; color: #333; }
+        .btn-sm { padding: 4px 12px; font-size: 12px; }
+        
+        /* FORMS */
+        .form-group { margin-bottom: 16px; }
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            font-size: 13px;
+            margin-bottom: 4px;
+            color: #333;
+        }
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px 14px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: 'Inter', sans-serif;
+            transition: border-color 0.3s;
+            background: white;
+        }
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+        @media (max-width: 768px) {
+            .form-row { grid-template-columns: 1fr; }
+        }
+        
+        /* TABS */
+        .tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 12px;
+            flex-wrap: wrap;
+        }
+        .tabs .tab {
+            padding: 8px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        .tabs .tab.active {
+            background: #667eea;
+            color: white;
+        }
+        .tabs .tab:not(.active):hover { background: #f0f4f8; }
+        
+        .hidden { display: none !important; }
+        
+        /* NOTIFICATION */
+        .notification {
+            padding: 16px 20px;
+            border-radius: 12px;
+            margin-bottom: 16px;
+            font-weight: 500;
+            display: none;
+        }
+        .notification.show { display: block; }
+        .notification.success { background: #c6f6d5; color: #22543d; border-left: 4px solid #48bb78; }
+        .notification.error { background: #fed7d7; color: #9b2c2c; border-left: 4px solid #fc8181; }
+        .notification.info { background: #bee3f8; color: #2a4365; border-left: 4px solid #63b3ed; }
+        
+        /* VIDEO */
+        .video-container {
+            background: #1a1a2e;
+            border-radius: 12px;
+            overflow: hidden;
+            aspect-ratio: 4/3;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+        .video-container video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .video-placeholder {
+            color: #8892b0;
+            text-align: center;
+            padding: 40px;
+        }
+        .video-placeholder .big-icon { font-size: 48px; display: block; margin-bottom: 12px; }
+        
+        /* BADGE STATUS */
+        .badge {
+            padding: 2px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .badge-hadir { background: #c6f6d5; color: #22543d; }
+        .badge-terlambat { background: #fefcbf; color: #744210; }
+        .badge-izin { background: #bee3f8; color: #2a4365; }
+        .badge-cuti { background: #e9d8fd; color: #44337a; }
+        .badge-alpa { background: #fed7d7; color: #9b2c2c; }
+        .badge-aktif { background: #c6f6d5; color: #22543d; }
+        .badge-tidak-aktif { background: #fed7d7; color: #9b2c2c; }
+        
+        /* FILTER BAR */
+        .filter-bar {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 16px;
+            align-items: end;
+        }
+        .filter-bar .form-group {
+            margin-bottom: 0;
+            flex: 1;
+            min-width: 150px;
+        }
+        .filter-bar .form-group label { font-size: 12px; }
+        .filter-bar .form-group select,
+        .filter-bar .form-group input {
+            padding: 8px 12px;
+            font-size: 13px;
+        }
+        
+        /* SCROLL */
+        .sidebar::-webkit-scrollbar { width: 4px; }
+        .sidebar::-webkit-scrollbar-track { background: transparent; }
+        .sidebar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 4px; }
+        
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 60px;
+                padding: 16px 8px;
+            }
+            .sidebar h2 { font-size: 14px; text-align: center; }
+            .sidebar .nav-item .label { display: none; }
+            .sidebar .nav-item { justify-content: center; padding: 12px; }
+            .sidebar .user-info-sidebar { display: none; }
+            .main-content { margin-left: 60px; padding: 16px; }
+            .header h1 { font-size: 20px; }
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- SIDEBAR -->
+    <div class="sidebar" id="sidebar">
+        <h2>📸 Absensi</h2>
+        <div class="nav-item active" onclick="showTab('dashboard')">
+            <span>📊</span> <span class="label">Dashboard</span>
+        </div>
+        <div class="nav-item" onclick="showTab('absensi')">
+            <span>✅</span> <span class="label">Absensi Wajah</span>
+        </div>
+        <div class="nav-item" onclick="showTab('karyawan')">
+            <span>👥</span> <span class="label">Manajemen Karyawan</span>
+        </div>
+        <div class="nav-item" onclick="showTab('ketidakhadiran')">
+            <span>📋</span> <span class="label">Ketidakhadiran</span>
+        </div>
+        <div class="nav-item" onclick="showTab('laporan')">
+            <span>📈</span> <span class="label">Laporan</span>
+        </div>
+        <div class="nav-item" onclick="logout()">
+            <span>🚪</span> <span class="label">Logout</span>
+        </div>
+        <div class="user-info-sidebar" id="userInfoSidebar">
+            <div class="name" id="sidebarName">User</div>
+            <div class="role" id="sidebarRole">Role</div>
+        </div>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div class="main-content">
+        <!-- HEADER -->
+        <div class="header">
+            <h1 id="pageTitle">Dashboard</h1>
+            <div class="user-info">
+                <span id="userNameDisplay">User</span>
+                <span class="role-badge" id="userRoleBadge">Anggota</span>
+                <div class="avatar" id="userAvatar">U</div>
+            </div>
+        </div>
+
+        <!-- NOTIFICATION -->
+        <div class="notification" id="notification"></div>
+
+        <!-- ========================================== -->
+        <!-- TAB 1: DASHBOARD -->
+        <!-- ========================================== -->
+        <div id="tab-dashboard">
+            <!-- Filter Dashboard -->
+            <div class="card">
+                <div class="filter-bar">
+                    <div class="form-group">
+                        <label>Departemen</label>
+                        <select id="dashboardDepartemen" onchange="loadDashboard()">
+                            <option value="Semua">Semua Departemen</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="stats-grid" id="statsGrid">
+                <div class="stat-card"><div class="number" id="totalKaryawan">0</div><div class="label">Total Karyawan</div></div>
+                <div class="stat-card"><div class="number" id="hadir">0</div><div class="label">Hadir Hari Ini</div></div>
+                <div class="stat-card"><div class="number" id="izin">0</div><div class="label">Izin</div></div>
+                <div class="stat-card"><div class="number" id="cuti">0</div><div class="label">Cuti</div></div>
+                <div class="stat-card"><div class="number" id="alpa">0</div><div class="label">Alpa</div></div>
+            </div>
+
+            <div class="card">
+                <h3>📋 Rekap Absensi Hari Ini</h3>
+                <div class="table-responsive" id="todayAttendanceTable">
+                    <p style="color:#888; text-align:center; padding:20px;">Memuat data...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========================================== -->
+        <!-- TAB 2: ABSENSI WAJAH -->
+        <!-- ========================================== -->
+        <div id="tab-absensi" class="hidden">
+            <div class="card">
+                <h3>📸 Absensi dengan Pengenalan Wajah</h3>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+                    <div>
+                        <div class="video-container">
+                            <video id="video" autoplay muted playsinline></video>
+                        </div>
+                        <div style="display: flex; gap: 12px; margin-top: 16px;">
+                            <button class="btn btn-success" onclick="startAttendance('Masuk')" style="flex:1; padding: 14px; font-size: 16px;">✅ Absen Masuk</button>
+                            <button class="btn btn-warning" onclick="startAttendance('Pulang')" style="flex:1; padding: 14px; font-size: 16px;">✅ Absen Pulang</button>
+                        </div>
+                        <div id="attendanceStatus" style="margin-top: 12px; padding: 12px; background: #f8fafc; border-radius: 8px; text-align: center; color: #666;">
+                            ⏳ Siap untuk absensi
+                        </div>
+                    </div>
+                    <div>
+                        <div class="card" style="margin-bottom:0;">
+                            <h4>📖 Instruksi</h4>
+                            <ol style="padding-left: 20px; color: #555; line-height: 2.2;">
+                                <li>Pastikan wajah terlihat jelas di kamera</li>
+                                <li>Pilih <strong>Absen Masuk</strong> atau <strong>Absen Pulang</strong></li>
+                                <li>Tunggu hingga sistem mengenali wajah Anda</li>
+                                <li>Notifikasi akan muncul jika berhasil</li>
+                            </ol>
+                            <hr style="margin: 16px 0; border-color: #e2e8f0;">
+                            <h4>👤 Info Pengenalan</h4>
+                            <div id="recognitionInfo" style="color: #666; font-size: 14px;">
+                                <p>Belum ada pengenalan</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========================================== -->
+        <!-- TAB 3: MANAJEMEN KARYAWAN -->
+        <!-- ========================================== -->
+        <div id="tab-karyawan" class="hidden">
+            <div class="card">
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 16px;">
+                    <h3 style="margin:0;">👥 Daftar Karyawan</h3>
+                    <div style="display: flex; gap: 8px;">
+                        <button class="btn btn-primary" onclick="showAddEmployee()">+ Tambah</button>
+                        <button class="btn btn-outline" onclick="loadEmployees()">🔄 Refresh</button>
+                    </div>
+                </div>
+                <div class="table-responsive" id="employeeTable">
+                    <p style="color:#888; text-align:center; padding:20px;">Memuat data...</p>
+                </div>
+            </div>
+
+            <!-- Form Tambah Karyawan -->
+            <div id="addEmployeeForm" class="card hidden">
+                <h3>📝 Tambah Karyawan Baru</h3>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>ID Karyawan *</label>
+                        <input type="text" id="empId" placeholder="Contoh: 004" />
+                    </div>
+                    <div class="form-group">
+                        <label>Nama Lengkap *</label>
+                        <input type="text" id="empName" placeholder="Nama karyawan" />
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Departemen *</label>
+                        <input type="text" id="empDepartemen" placeholder="Contoh: IT, HRD, Marketing" />
+                    </div>
+                    <div class="form-group">
+                        <label>Role</label>
+                        <select id="empRole">
+                            <option value="Anggota">Anggota</option>
+                            <option value="Petugas">Petugas</option>
+                            <option value="Admin">Admin</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Foto</label>
+                    <input type="file" id="empPhoto" accept="image/*" />
+                </div>
+                <div style="display: flex; gap: 12px;">
+                    <button class="btn btn-success" onclick="saveEmployee()">💾 Simpan</button>
+                    <button class="btn btn-danger" onclick="hideAddEmployee()">❌ Batal</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========================================== -->
+        <!-- TAB 4: KETIDAKHADIRAN -->
+        <!-- ========================================== -->
+        <div id="tab-ketidakhadiran" class="hidden">
+            <div class="card">
+                <h3>📝 Input Ketidakhadiran</h3>
+                <div class="filter-bar" style="margin-bottom:16px;">
+                    <div class="form-group">
+                        <label>Departemen</label>
+                        <select id="absenceDepartemen" onchange="loadAbsenceDropdown()">
+                            <option value="Semua">Semua Departemen</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Pilih Karyawan *</label>
+                        <select id="absenceEmployee">
+                            <option value="">-- Pilih --</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Status *</label>
+                        <select id="absenceStatus">
+                            <option value="Izin">Izin</option>
+                            <option value="Cuti">Cuti</option>
+                            <option value="Alpa">Alpa</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Keterangan</label>
+                    <input type="text" id="absenceNote" placeholder="Alasan / detail..." />
+                </div>
+                <button class="btn btn-success" onclick="saveAbsence()">💾 Simpan</button>
+            </div>
+
+            <div class="card">
+                <h3>📋 Rekap Ketidakhadiran Hari Ini</h3>
+                <div class="table-responsive" id="todayAbsenceTable">
+                    <p style="color:#888; text-align:center; padding:20px;">Memuat data...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========================================== -->
+        <!-- TAB 5: LAPORAN -->
+        <!-- ========================================== -->
+        <div id="tab-laporan" class="hidden">
+            <div class="card">
+                <h3>📈 Filter Laporan</h3>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Tanggal Mulai *</label>
+                        <input type="date" id="reportStart" />
+                    </div>
+                    <div class="form-group">
+                        <label>Tanggal Akhir *</label>
+                        <input type="date" id="reportEnd" />
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Departemen</label>
+                        <select id="reportDepartemen">
+                            <option value="Semua">Semua Departemen</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Status Kehadiran</label>
+                        <select id="reportStatus">
+                            <option value="Semua">Semua Status</option>
+                            <option value="Hadir">Hadir</option>
+                            <option value="Terlambat">Terlambat</option>
+                            <option value="Izin">Izin</option>
+                            <option value="Cuti">Cuti</option>
+                            <option value="Alpa">Alpa</option>
+                        </select>
+                    </div>
+                </div>
+                <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                    <button class="btn btn-primary" onclick="loadReport()">📊 Tampilkan Laporan</button>
+                    <button class="btn btn-success" onclick="exportReport()">📥 Ekspor CSV</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>📋 Hasil Laporan</h3>
+                <div id="reportSummary" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 12px; margin-bottom: 16px;"></div>
+                <div class="table-responsive" id="reportTable">
+                    <p style="color:#888; text-align:center; padding:20px;">Pilih periode dan klik Tampilkan Laporan</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // =====================================================
+        // KONFIGURASI
+        // =====================================================
+        var APPS_SCRIPT_URL = 'https://script.google.com/macros/s/ID_APPS_SCRIPT_ANDA/exec';
+        var userData = null;
+        var video = document.getElementById('video');
+        var stream = null;
+
+        // =====================================================
+        // INISIALISASI USER
+        // =====================================================
+        function initUser() {
+            try {
+                var stored = localStorage.getItem('user');
+                if (stored) {
+                    userData = JSON.parse(stored);
+                    document.getElementById('sidebarName').textContent = userData.username || 'User';
+                    document.getElementById('sidebarRole').textContent = userData.role || 'Anggota';
+                    document.getElementById('userNameDisplay').textContent = userData.username || 'User';
+                    document.getElementById('userAvatar').textContent = (userData.username || 'U')[0].toUpperCase();
+                    
+                    var badge = document.getElementById('userRoleBadge');
+                    badge.textContent = userData.role || 'Anggota';
+                    badge.className = 'role-badge ' + (userData.role || 'anggota').toLowerCase();
+                    
+                    // Sembunyikan menu yang tidak diakses
+                    var role = userData.role || 'Anggota';
+                    if (role === 'Anggota') {
+                        document.querySelector('.nav-item:nth-child(3)').style.display = 'none'; // Karyawan
+                        document.querySelector('.nav-item:nth-child(4)').style.display = 'none'; // Ketidakhadiran
+                        document.querySelector('.nav-item:nth-child(5)').style.display = 'none'; // Laporan
+                    } else if (role === 'Petugas') {
+                        document.querySelector('.nav-item:nth-child(3)').style.display = 'none'; // Karyawan
+                        document.querySelector('.nav-item:nth-child(5)').style.display = 'none'; // Laporan
+                    }
+                } else {
+                    window.location.href = 'index.html';
+                }
+            } catch (e) {
+                window.location.href = 'index.html';
+            }
+        }
+
+        // =====================================================
+        // NAVIGASI
+        // =====================================================
+        function showTab(tab) {
+            document.querySelectorAll('[id^="tab-"]').forEach(el => el.classList.add('hidden'));
+            document.getElementById('tab-' + tab).classList.remove('hidden');
+            
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(el => {
+                if (el.textContent.trim().toLowerCase().includes(tab)) {
+                    el.classList.add('active');
+                }
+            });
+            
+            var titles = {
+                'dashboard': 'Dashboard',
+                'absensi': 'Absensi Wajah',
+                'karyawan': 'Manajemen Karyawan',
+                'ketidakhadiran': 'Ketidakhadiran',
+                'laporan': 'Laporan'
+            };
+            document.getElementById('pageTitle').textContent = titles[tab] || 'Dashboard';
+
+            if (tab === 'dashboard') { loadDepartemenDropdown('dashboardDepartemen'); loadDashboard(); }
+            if (tab === 'absensi') startCamera();
+            if (tab === 'karyawan') loadEmployees();
+            if (tab === 'ketidakhadiran') { loadDepartemenDropdown('absenceDepartemen'); loadAbsenceDropdown(); loadAbsenceData(); }
+            if (tab === 'laporan') { loadDepartemenDropdown('reportDepartemen'); }
+        }
+
+        function logout() {
+            localStorage.removeItem('user');
+            window.location.href = 'index.html';
+        }
+
+        // =====================================================
+        // NOTIFICATION
+        // =====================================================
+        function showNotification(message, type) {
+            var el = document.getElementById('notification');
+            el.textContent = message;
+            el.className = 'notification show ' + type;
+            setTimeout(function() { el.classList.remove('show'); }, 5000);
+        }
+
+        // =====================================================
+        // LOAD DEPARTEMEN DROPDOWN
+        // =====================================================
+        async function loadDepartemenDropdown(elementId) {
+            try {
+                var response = await fetch(APPS_SCRIPT_URL + '?action=departemen_list');
+                var data = await response.json();
+                var select = document.getElementById(elementId);
+                if (!select) return;
+                select.innerHTML = '';
+                data.forEach(function(dept) {
+                    var opt = document.createElement('option');
+                    opt.value = dept;
+                    opt.textContent = dept;
+                    select.appendChild(opt);
+                });
+                if (select.options.length === 0) {
+                    select.innerHTML = '<option value="Semua">Semua Departemen</option>';
+                }
+            } catch (e) {
+                console.error('Error loading departemen:', e);
+            }
+        }
+
+        // =====================================================
+        // DASHBOARD
+        // =====================================================
+        async function loadDashboard() {
+            try {
+                var departemen = document.getElementById('dashboardDepartemen').value || 'Semua';
+                var response = await fetch(APPS_SCRIPT_URL + '?action=dashboard&departemen=' + encodeURIComponent(departemen));
+                var data = await response.json();
+                document.getElementById('totalKaryawan').textContent = data.totalKaryawan || 0;
+                document.getElementById('hadir').textContent = data.hadir || 0;
+                document.getElementById('izin').textContent = data.izin || 0;
+                document.getElementById('cuti').textContent = data.cuti || 0;
+                document.getElementById('alpa').textContent = data.alpa || 0;
+                loadTodayAttendance();
+            } catch (e) {
+                console.error('Error loading dashboard:', e);
+            }
+        }
+
+        async function loadTodayAttendance() {
+            try {
+                var departemen = document.getElementById('dashboardDepartemen').value || 'Semua';
+                var response = await fetch(APPS_SCRIPT_URL + '?action=today_attendance&departemen=' + encodeURIComponent(departemen));
+                var data = await response.json();
+                var container = document.getElementById('todayAttendanceTable');
+                if (!data || data.length === 0) {
+                    container.innerHTML = '<p style="color:#888; text-align:center; padding:20px;">Belum ada absensi hari ini.</p>';
+                    return;
+                }
+                var html = `<table><thead><tr><th>Waktu</th><th>Nama</th><th>Jenis</th><th>Status</th><th>Confidence</th></tr></thead><tbody>`;
+                data.forEach(function(row) {
+                    var badgeClass = row.status === 'Hadir' ? 'badge-hadir' : 'badge-terlambat';
+                    html += `<tr>
+                        <td>${row.time}</td>
+                        <td><strong>${row.name}</strong></td>
+                        <td>${row.type}</td>
+                        <td><span class="badge ${badgeClass}">${row.status}</span></td>
+                        <td>${(row.confidence * 100).toFixed(1)}%</td>
+                    </tr>`;
+                });
+                html += '</tbody></table>';
+                container.innerHTML = html;
+            } catch (e) {
+                document.getElementById('todayAttendanceTable').innerHTML = '<p style="color:#e53e3e; text-align:center; padding:20px;">Error memuat data</p>';
+            }
+        }
+
+        // =====================================================
+        // ABSENSI WAJAH
+        // =====================================================
+        async function startCamera() {
+            try {
+                if (!stream) {
+                    stream = await navigator.mediaDevices.getUserMedia({ 
+                        video: { facingMode: 'user', width: 640, height: 480 } 
+                    });
+                    video.srcObject = stream;
+                    await video.play();
+                }
+                document.getElementById('attendanceStatus').textContent = '✅ Kamera aktif, siap untuk absensi';
+                document.getElementById('attendanceStatus').style.background = '#c6f6d5';
+                document.getElementById('attendanceStatus').style.color = '#22543d';
+            } catch (e) {
+                document.getElementById('attendanceStatus').textContent = '❌ Gagal mengakses kamera: ' + e.message;
+                document.getElementById('attendanceStatus').style.background = '#fed7d7';
+                document.getElementById('attendanceStatus').style.color = '#9b2c2c';
+            }
+        }
+
+        async function startAttendance(type) {
+            var statusEl = document.getElementById('attendanceStatus');
+            statusEl.textContent = '⏳ Memproses ' + type + '...';
+            statusEl.style.background = '#fefcbf';
+            statusEl.style.color = '#744210';
+            
+            try {
+                if (!stream) {
+                    await startCamera();
+                }
+                
+                // Ambil frame dari video
+                var canvas = document.createElement('canvas');
+                canvas.width = video.videoWidth || 640;
+                canvas.height = video.videoHeight || 480;
+                var ctx = canvas.getContext('2d');
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                var imageData = canvas.toDataURL('image/jpeg', 0.8);
+                
+                // ===== UNTUK DEMO: Simulasi pengenalan =====
+                // Ganti bagian ini dengan integrasi ke Google Colab API
+                // Contoh: POST ke endpoint Flask di Colab
+                var dummyResult = {
+                    id: '001',
+                    name: 'Andi',
+                    confidence: 0.95
+                };
+                // ============================================
+                
+                // Update info recognition
+                document.getElementById('recognitionInfo').innerHTML = `
+                    <p><strong>ID:</strong> ${dummyResult.id}</p>
+                    <p><strong>Nama:</strong> ${dummyResult.name}</p>
+                    <p><strong>Confidence:</strong> ${(dummyResult.confidence * 100).toFixed(1)}%</p>
+                `;
+                
+                if (dummyResult && dummyResult.confidence > 0.7) {
+                    // Kirim ke Google Sheets
+                    var saveResponse = await fetch(APPS_SCRIPT_URL + '?action=attendance', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                        body: 'id=' + encodeURIComponent(dummyResult.id) +
+                              '&name=' + encodeURIComponent(dummyResult.name) +
+                              '&type=' + encodeURIComponent(type) +
+                              '&confidence=' + encodeURIComponent(dummyResult.confidence)
+                    });
+                    var result = await saveResponse.json();
+                    
+                    if (result.status && result.status.startsWith('SUKSES')) {
+                        statusEl.textContent = '✅ ' + result.status;
+                        statusEl.style.background = '#c6f6d5';
+                        statusEl.style.color = '#22543d';
+                        showNotification(result.status, 'success');
+                        loadDashboard();
+                    } else {
+                        statusEl.textContent = '❌ ' + (result.status || 'Gagal menyimpan absensi');
+                        statusEl.style.background = '#fed7d7';
+                        statusEl.style.color = '#9b2c2c';
+                        showNotification(result.status || 'Gagal menyimpan absensi', 'error');
+                    }
+                } else {
+                    statusEl.textContent = '❌ Wajah tidak dikenali, coba lagi!';
+                    statusEl.style.background = '#fed7d7';
+                    statusEl.style.color = '#9b2c2c';
+                    showNotification('Wajah tidak dikenali, coba lagi!', 'error');
+                }
+            } catch (e) {
+                statusEl.textContent = '❌ Error: ' + e.message;
+                statusEl.style.background = '#fed7d7';
+                statusEl.style.color = '#9b2c2c';
+                showNotification('Error: ' + e.message, 'error');
+            }
+        }
+
+        // =====================================================
+        // MANAJEMEN KARYAWAN
+        // =====================================================
+        async function loadEmployees() {
+            try {
+                var response = await fetch(APPS_SCRIPT_URL + '?action=employees_full');
+                var data = await response.json();
+                var container = document.getElementById('employeeTable');
+                if (!data || data.length === 0) {
+                    container.innerHTML = '<p style="color:#888; text-align:center; padding:20px;">Belum ada karyawan terdaftar.</p>';
+                    return;
+                }
+                var html = `<table><thead><tr><th>ID</th><th>Nama</th><th>Departemen</th><th>Role</th><th>Status</th><th>Aksi</th></tr></thead><tbody>`;
+                data.forEach(function(row) {
+                    var statusBadge = row.status === 'Aktif' ? 'badge-aktif' : 'badge-tidak-aktif';
+                    html += `<tr>
+                        <td><strong>${row.id}</strong></td>
+                        <td>${row.name}</td>
+                        <td>${row.departemen}</td>
+                        <td>${row.role || 'Anggota'}</td>
+                        <td><span class="badge ${statusBadge}">${row.status}</span></td>
+                        <td>
+                            ${row.status === 'Aktif' ? `<button class="btn btn-danger btn-sm" onclick="deleteEmployee('${row.id}')">Nonaktifkan</button>` : `<span style="color:#888;">-</span>`}
+                        </td>
+                    </tr>`;
+                });
+                html += '</tbody></table>';
+                container.innerHTML = html;
+            } catch (e) {
+                document.getElementById('employeeTable').innerHTML = '<p style="color:#e53e3e; text-align:center; padding:20px;">Error memuat data</p>';
+            }
+        }
+
+        function showAddEmployee() {
+            document.getElementById('addEmployeeForm').classList.remove('hidden');
+        }
+
+        function hideAddEmployee() {
+            document.getElementById('addEmployeeForm').classList.add('hidden');
+            document.getElementById('empId').value = '';
+            document.getElementById('empName').value = '';
+            document.getElementById('empDepartemen').value = '';
+            document.getElementById('empPhoto').value = '';
+        }
+
+        async function saveEmployee() {
+            var id = document.getElementById('empId').value.trim();
+            var name = document.getElementById('empName').value.trim();
+            var departemen = document.getElementById('empDepartemen').value.trim();
+            var role = document.getElementById('empRole').value;
+            var photoFile = document.getElementById('empPhoto').files[0];
+
+            if (!id || !name || !departemen) {
+                showNotification('ID, Nama, dan Departemen harus diisi!', 'error');
+                return;
+            }
+
+            try {
+                var base64 = '';
+                if (photoFile) {
+                    var reader = new FileReader();
+                    base64 = await new Promise((resolve) => {
+                        reader.onload = function(e) { resolve(e.target.result); };
+                        reader.readAsDataURL(photoFile);
+                    });
+                }
+
+                var response = await fetch(APPS_SCRIPT_URL + '?action=add_employee', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: 'id=' + encodeURIComponent(id) +
+                          '&name=' + encodeURIComponent(name) +
+                          '&departemen=' + encodeURIComponent(departemen) +
+                          '&role=' + encodeURIComponent(role) +
+                          '&image=' + encodeURIComponent(base64)
+                });
+                var result = await response.json();
+                showNotification(result.status || 'Berhasil menambahkan karyawan!', 'success');
+                hideAddEmployee();
+                loadEmployees();
+                loadDashboard();
+            } catch (e) {
+                showNotification('Error: ' + e.message, 'error');
+            }
+        }
+
+        async function deleteEmployee(id) {
+            if (!confirm('Yakin ingin menonaktifkan karyawan ini?')) return;
+            try {
+                var response = await fetch(APPS_SCRIPT_URL + '?action=delete_employee', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: 'id=' + encodeURIComponent(id)
+                });
+                var result = await response.json();
+                showNotification(result.status || 'Karyawan berhasil dinonaktifkan', 'success');
+                loadEmployees();
+                loadDashboard();
+            } catch (e) {
+                showNotification('Error: ' + e.message, 'error');
+            }
+        }
+
+        // =====================================================
+        // KETIDAKHADIRAN
+        // =====================================================
+        async function loadAbsenceDropdown() {
+            try {
+                var departemen = document.getElementById('absenceDepartemen').value || 'Semua';
+                var response = await fetch(APPS_SCRIPT_URL + '?action=employees&departemen=' + encodeURIComponent(departemen));
+                var data = await response.json();
+                var select = document.getElementById('absenceEmployee');
+                select.innerHTML = '<option value="">-- Pilih --</option>';
+                data.forEach(function(row) {
+                    select.innerHTML += `<option value="${row.id}">${row.id} - ${row.name}</option>`;
+                });
+            } catch (e) {
+                console.error('Error loading absence dropdown:', e);
+            }
+        }
+
+        async function loadAbsenceData() {
+            try {
+                var departemen = document.getElementById('absenceDepartemen').value || 'Semua';
+                var response = await fetch(APPS_SCRIPT_URL + '?action=today_absence&departemen=' + encodeURIComponent(departemen));
+                var data = await response.json();
+                var container = document.getElementById('todayAbsenceTable');
+                if (!data || data.length === 0) {
+                    container.innerHTML = '<p style="color:#888; text-align:center; padding:20px;">Belum ada ketidakhadiran hari ini.</p>';
+                    return;
+                }
+                var html = `<table><thead><tr><th>Nama</th><th>Status</th><th>Keterangan</th></tr></thead><tbody>`;
+                var colors = { 'Izin': 'badge-izin', 'Cuti': 'badge-cuti', 'Alpa': 'badge-alpa' };
+                data.forEach(function(row) {
+                    html += `<tr>
+                        <td><strong>${row.name}</strong></td>
+                        <td><span class="badge ${colors[row.status] || ''}">${row.status}</span></td>
+                        <td>${row.note || '-'}</td>
+                    </tr>`;
+                });
+                html += '</tbody></table>';
+                container.innerHTML = html;
+            } catch (e) {
+                document.getElementById('todayAbsenceTable').innerHTML = '<p style="color:#e53e3e; text-align:center; padding:20px;">Error memuat data</p>';
+            }
+        }
+
+        async function saveAbsence() {
+            var id = document.getElementById('absenceEmployee').value;
+            var status = document.getElementById('absenceStatus').value;
+            var note = document.getElementById('absenceNote').value.trim();
+
+            if (!id) {
+                showNotification('Pilih karyawan terlebih dahulu!', 'error');
+                return;
+            }
+
+            // Ambil nama karyawan dari dropdown
+            var select = document.getElementById('absenceEmployee');
+            var name = select.options[select.selectedIndex].text.split(' - ')[1] || '';
+
+            try {
+                var response = await fetch(APPS_SCRIPT_URL + '?action=absence', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: 'id=' + encodeURIComponent(id) +
+                          '&name=' + encodeURIComponent(name) +
+                          '&status=' + encodeURIComponent(status) +
+                          '&note=' + encodeURIComponent(note)
+                });
+                var result = await response.json();
+                showNotification(result.status || 'Berhasil mencatat ketidakhadiran!', 'success');
+                document.getElementById('absenceNote').value = '';
+                loadAbsenceData();
+                loadDashboard();
+            } catch (e) {
+                showNotification('Error: ' + e.message, 'error');
+            }
+        }
+
+        // =====================================================
+        // LAPORAN
+        // =====================================================
+        async function loadReport() {
+            var start = document.getElementById('reportStart').value;
+            var end = document.getElementById('reportEnd').value;
+            var departemen = document.getElementById('reportDepartemen').value || 'Semua';
+            var status = document.getElementById('reportStatus').value || 'Semua';
+
+            if (!start || !end) {
+                showNotification('Pilih tanggal mulai dan akhir!', 'error');
+                return;
+            }
+
+            try {
+                var response = await fetch(APPS_SCRIPT_URL + '?action=report&start=' + encodeURIComponent(start) + 
+                                          '&end=' + encodeURIComponent(end) + 
+                                          '&departemen=' + encodeURIComponent(departemen) +
+                                          '&status=' + encodeURIComponent(status));
+                var data = await response.json();
+                
+                // Summary
+                var summaryContainer = document.getElementById('reportSummary');
+                if (data.summary) {
+                    summaryContainer.innerHTML = `
+                        <div class="stat-card"><div class="number">${data.summary.totalHadir || 0}</div><div class="label">Hadir</div></div>
+                        <div class="stat-card"><div class="number">${data.summary.totalTerlambat || 0}</div><div class="label">Terlambat</div></div>
+                        <div class="stat-card"><div class="number">${data.summary.totalIzin || 0}</div><div class="label">Izin</div></div>
+                        <div class="stat-card"><div class="number">${data.summary.totalCuti || 0}</div><div class="label">Cuti</div></div>
+                        <div class="stat-card"><div class="number">${data.summary.totalAlpa || 0}</div><div class="label">Alpa</div></div>
+                        <div class="stat-card"><div class="number">${data.total || 0}</div><div class="label">Total Record</div></div>
+                    `;
+                }
+                
+                // Table
+                var tableContainer = document.getElementById('reportTable');
+                if (!data.report || data.report.length === 0) {
+                    tableContainer.innerHTML = '<p style="color:#888; text-align:center; padding:20px;">Tidak ada data untuk periode yang dipilih.</p>';
+                    return;
+                }
+                
+                var html = `<table><thead><tr><th>Tanggal</th><th>ID</th><th>Nama</th><th>Departemen</th><th>Masuk</th><th>Pulang</th><th>Status</th><th>Keterangan</th></tr></thead><tbody>`;
+                var colors = { 'Hadir': 'badge-hadir', 'Terlambat': 'badge-terlambat', 'Izin': 'badge-izin', 'Cuti': 'badge-cuti', 'Alpa': 'badge-alpa' };
+                data.report.forEach(function(row) {
+                    html += `<tr>
+                        <td>${row.date}</td>
+                        <td>${row.id}</td>
+                        <td><strong>${row.name}</strong></td>
+                        <td>${row.departemen}</td>
+                        <td>${row.masuk}</td>
+                        <td>${row.pulang}</td>
+                        <td><span class="badge ${colors[row.status] || ''}">${row.status}</span></td>
+                        <td>${row.note || '-'}</td>
+                    </tr>`;
+                });
+                html += '</tbody></table>';
+                tableContainer.innerHTML = html;
+                
+                showNotification('Laporan berhasil dimuat! Total ' + (data.total || 0) + ' record', 'success');
+            } catch (e) {
+                showNotification('Error: ' + e.message, 'error');
+            }
+        }
+
+        function exportReport() {
+            var start = document.getElementById('reportStart').value;
+            var end = document.getElementById('reportEnd').value;
+            var departemen = document.getElementById('reportDepartemen').value || 'Semua';
+            var status = document.getElementById('reportStatus').value || 'Semua';
+
+            if (!start || !end) {
+                showNotification('Pilih tanggal mulai dan akhir!', 'error');
+                return;
+            }
+
+            var url = APPS_SCRIPT_URL + '?action=export&start=' + encodeURIComponent(start) +
+                      '&end=' + encodeURIComponent(end) +
+                      '&departemen=' + encodeURIComponent(departemen) +
+                      '&status=' + encodeURIComponent(status);
+            window.open(url, '_blank');
+        }
+
+        // =====================================================
+        // INIT
+        // =====================================================
+        // Set default tanggal untuk laporan
+        var today = new Date();
+        var firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+        document.getElementById('reportStart').value = firstDay.toISOString().split('T')[0];
+        document.getElementById('reportEnd').value = today.toISOString().split('T')[0];
+
+        // Init user
+        initUser();
+
+        // Load default tab
+        showTab('dashboard');
+    </script>
+
+</body>
+</html>
