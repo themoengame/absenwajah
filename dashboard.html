@@ -352,12 +352,12 @@
         <div class="nav-item" onclick="showTab('absensi')">
             <span>✅</span> <span class="label">Absensi Wajah</span>
         </div>
+        <div class="nav-item" onclick="window.location.href='foto_karyawan.html'">
+            <span>📸</span> <span class="label">Foto Karyawan</span>
+        </div>
         <div class="nav-item" onclick="showTab('karyawan')">
             <span>👥</span> <span class="label">Manajemen Karyawan</span>
         </div>
-        <div class="nav-item" onclick="window.location.href='foto_karyawan.html'">
-    <span>📸</span> <span class="label">Foto Karyawan</span>
-</div>
         <div class="nav-item" onclick="showTab('ketidakhadiran')">
             <span>📋</span> <span class="label">Ketidakhadiran</span>
         </div>
@@ -638,10 +638,20 @@
                     
                     // Sembunyikan menu yang tidak diakses
                     var role = userData.role || 'Anggota';
-                    if (role === 'Anggota') {
-                        document.querySelector('.nav-item:nth-child(3)').style.display = 'none'; // Karyawan
-                        document.querySelector('.nav-item:nth-child(4)').style.display = 'none'; // Ketidakhadiran
-                        document.querySelector('.nav-item:nth-child(5)').style.display = 'none'; // Laporan
+                                if (role === 'Anggota') {
+                // Anggota hanya bisa lihat Dashboard, Absensi, dan Logout
+                document.querySelectorAll('.nav-item').forEach(function(el) {
+                    var label = el.querySelector('.label');
+                    if (label) {
+                        var text = label.textContent.trim();
+                        if (text === 'Foto Karyawan' || 
+                            text === 'Manajemen Karyawan' || 
+                            text === 'Ketidakhadiran' || 
+                            text === 'Laporan') {
+                            el.style.display = 'none';
+                        }
+                    }
+                });
                     } else if (role === 'Petugas') {
                         document.querySelector('.nav-item:nth-child(3)').style.display = 'none'; // Karyawan
                         document.querySelector('.nav-item:nth-child(5)').style.display = 'none'; // Laporan
